@@ -1,0 +1,303 @@
+{% load staticfiles %}
+<head>
+	<link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+	<script src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+	<title>TweetMap</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<meta charset="utf-8">
+	<style>
+	#map {
+		height: 100%;
+		width: 100%;
+	}
+	</style>
+</head>
+<body>
+	<nav class="navbar navbar-default navbar-fixed-top">
+	  <div class="container-fluid">
+
+		<div class="navbar-header">
+		  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		  </button>
+		  <a class="navbar-brand" href="/tweetmap">TweetMap</a>
+		</div>
+
+		<div id="navbar" class="navbar-collapse collapse">
+		  <ul class="nav navbar-nav">
+			<form class="navbar-form" action="search_query" method="POST">
+			  	<div class="form-group">
+			  	{% csrf_token %}
+			  	<input type="hidden" name="is_dropdown_search" value="1">
+				<select class="form-control" name="search_bar" id="dropdown_list" onchange='this.form.submit();'>
+					<li><option selected="select">Select Keyword</option></li>
+					<li><option value="cat">Cat</option></li>
+					<li><option value="dog">Dog</option></li>
+					<li><option value="cricket">Cricket</option></li>
+					<li><option value="football">Football</option></li>
+					<li><option value="modi">Modi</option></li>
+					<li><option value="trump">Trump</option></li>
+					<li><option value="song">Song</option></li>
+					<li><option value="vacation">Vacation</option></li>
+					<li><option value="offer">Offer</option></li>
+					<li><option value="sale">Sale</option></li>
+				</select>
+				</div>
+			</form>
+		  </ul>
+		  <form class="navbar-form" action="search_query" method="POST">
+		  	{% csrf_token %}
+			<div class="form-group">
+			  <input type="text" class="form-control" placeholder="Search" name="search_bar">
+			  <input type="hidden" name="is_dropdown_search" value="0">
+			</div>
+			<button type="submit" class="btn btn-default">Search</button>
+		  </form>
+		</div>
+	  </div>
+	</nav>
+
+	<footer class="navbar-default navbar-fixed-bottom" style="padding:5px;">
+		<div class="container">
+			<div style="display: inline-block;" class="foo blue">
+				<p style="display: inline-block;">English</p></div>
+			<div style="display: inline-block;" class="foo orange">
+				<p style="display: inline-block;">French</p></div>
+			<div style="display: inline-block;" class="foo green">
+				<p style="display: inline-block;">Spanish</p></div>
+			<div style="display: inline-block;" class="foo light-blue">
+				<p style="display: inline-block;">Portuguese</p></div>
+			<div style="display: inline-block;" class="foo light-green">
+				<p style="display: inline-block;">Russian</p></div>
+			<div style="display: inline-block;" class="foo yellow">
+				<p style="display: inline-block;">Japanese</p></div>
+			<div style="display: inline-block;" class="foo deep-purple">
+				<p style="display: inline-block;">Arabic</p></div>
+			<div style="display: inline-block;" class="foo purple">
+				<p style="display: inline-block;">Indonesian</p></div>
+			<div style="display: inline-block;" class="foo cyan">
+				<p style="display: inline-block;">Turkish</p></div>
+			<!-- <div style="display: inline-block;" class="foo pink">
+				<p style="display: inline-block;">Undetermined</p></div> -->
+			<!-- <div style="display: inline-block;" class="foo teal">
+				<p style="display: inline-block;">Tagalog</p></div> -->
+		</div>
+	</footer>
+
+	<style type="text/css">
+	.foo {
+		  float: left;
+		  width: auto;
+		  height: auto;
+		  margin: 0.5%;
+		  padding-top: 1%;
+		  padding-left: 1%;
+		  padding-right: 1%;
+		  border: 1px solid rgba(0, 0, 0, .2);
+		  color: white;
+		  font-weight: bold;
+		  border-radius: 7px;
+		}
+
+		.blue {
+		  background: #2962FF;
+		}
+
+		.light-blue {
+		  background: #00B0FF;
+		}
+
+		.cyan {
+			background: #00BCD4;
+		}
+
+		.green {
+		  background: #00E676;
+		}
+
+		.light-green {
+		  background: #76FF03;
+		}
+
+		.orange {
+		  background: #FF3D00;
+		}
+		
+		.pink {
+		  background: #E91E63;
+		}
+		
+		.purple {
+		  background: #9C27B0;
+		}
+
+		.deep-purple {
+		  background: #673AB7;
+		}
+
+		.red {
+		  background: #F44336;
+		}
+		
+		.teal {
+			background: #009688;
+		}
+
+		.yellow {
+		  background: #FFD600;
+		}
+	</style>
+
+	<script>
+		$(document).ready(function() {
+			var dropdown_option = {{ dropdown_option|safe }};
+			console.log("dropdown_option = " + dropdown_option);
+			if (dropdown_option!=0) {
+				$('#dropdown_list').prop('selectedIndex', dropdown_option);
+			}
+		});
+
+		function initMap(){
+			var languages = {{ languages|safe }}
+			var latitude = {{ latitude|safe }}
+			var longitude = {{ longitude|safe }}
+			var tweet_id = {{ tweet_id|safe }}
+			var tweet_text = {{ tweet_text|safe }}
+			var user_profile_image_url = {{ user_profile_image_url|safe }}
+			var user_screen_name = {{ user_screen_name|safe }}
+			
+			var ny = { lat: 40.7128, lng: -74.0060 };
+			var map = new google.maps.Map(document.getElementById('map'), {
+				zoom: 3,
+				center: ny,
+				styles : 
+				[
+					{
+						"stylers": [
+							{
+								"visibility": "simplified"
+							}
+						]
+					},
+					{
+						"stylers": [
+							{
+								"color": "#131314"
+							}
+						]
+					},
+					{
+						"featureType": "water",
+						"stylers": [
+							{
+								"color": "#131313"
+							},
+							{
+								"lightness": 7
+							}
+						]
+					},
+					{
+						"elementType": "labels.text.fill",
+						"stylers": [
+							{
+								"visibility": "on"
+							},
+							{
+								"lightness": 25
+							}
+						]
+					}
+				]
+			});
+
+			marker_color = 'black';
+			for(i = 0;i<latitude.length;i++){
+				if(latitude[i]!=999){
+					switch(languages[i]){
+						case 'ar': marker_color = '#673AB7'
+									break;
+						case 'en': marker_color = '#2962FF'
+									break;
+						case 'es': marker_color = '#00E676'
+									break;
+						case 'fr': marker_color = '#FF3D00'
+									break;
+						case 'id': marker_color = '#9C27B0'
+									break;
+						case 'ja': marker_color = '#FFD600'
+									break;
+						case 'ru': marker_color = '#76FF03'
+									break;
+						case 'pt': marker_color = '#00B0FF'
+									break;
+						case 'tr': marker_color = '#00BCD4'
+									break;
+					}
+
+					var dot_symbol = {
+						path: 'M 2,2 2,2 2,2 2,2 z',
+						strokeColor: marker_color,
+						fillColor: marker_color,
+						fillOpacity: 1,
+						scale: 7
+					};
+
+					var marker = new google.maps.Marker({
+						position: {lat: parseFloat(latitude[i]), lng: parseFloat(longitude[i])},
+						map: map,
+						title: 'Placeholder',
+						icon: dot_symbol
+					});
+
+					var tweet_url = "https://twitter.com/"+user_screen_name[i];
+
+					var content = '<style>'
+								+'.widget' 
+								+'{'
+								+	'max-width:300px;'
+								+	'margin:auto;'
+								+'}'
+								+'.profile_pic{'
+								+	'float:left;'
+								+	'width:40px;'
+								+	'height:40px;'
+								+	'border-radius:50%;'
+								+'}'
+								+'</style>'+'<div class="widget">'
+								+'<div>'
+								+'<img class="profile_pic" hspace="20" src='+user_profile_image_url[i]+' alt='+user_screen_name[i]+'>'
+								+'<h4 style="color: #1DA1F2; overflow:hidden;"><a href='+tweet_url+'>@'+user_screen_name[i]+'</a></h4>'
+								+'</div>'
+								+'<p style="font-size:15px; overflow:hidden;">'+tweet_text[i]+'</p>'
+								+'</div>';
+
+					var infowindow = new google.maps.InfoWindow()
+					bindInfoWindow(marker, map, infowindow, content)
+				}
+			}
+		}
+
+		var current = false;
+		
+		function bindInfoWindow(marker, map, infowindow, html) {
+			marker.addListener('click', function() {
+				if(current){
+					current.close();
+				}
+				current = infowindow;
+				infowindow.setContent(html);
+				infowindow.open(map, this);
+			});
+		}
+	</script>
+	<script async defer
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiWCMuoIlBjzLIFdHO-DH6vVXARVZgKHI&callback=initMap">
+	</script>
+	<div id="map"></div>
+</body>
