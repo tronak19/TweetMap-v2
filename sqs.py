@@ -40,7 +40,7 @@ def twitter_stream():
 	api = tweepy.API(auth)
 	stream_listener = StreamListener(api)
 	stream = tweepy.Stream(auth=api.auth, listener=stream_listener)
-	stream.filter(locations=[-180,-90,180,90])
+	stream.filter(locations=[-180,-90,180,90], languages=["en"])
 
 def create_queue():
 	sqs = boto3.resource('sqs')
