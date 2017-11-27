@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="shortcut icon" type="image/png" href="static/favicon.png"/>
+	<link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
+	<script src="static/js/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="static/css/toastr.min.css">
+	<script type="text/javascript" src="static/js/toastr.min.js"></script>
+	
+	<title>TweetMap</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<meta charset="utf-8">
+	<style>
+	html, body, #map {
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	</style>
+</head>
+<body>
+	<nav class="navbar navbar-default navbar-fixed-top">
+	  <div class="container-fluid">
+
+		<div class="navbar-header">
+		  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		  </button>
+		  <a class="navbar-brand" href="/tweetmap">TweetMap</a>
+		</div>
+
+		<div id="navbar" class="navbar-collapse collapse">
+		  <ul class="nav navbar-nav">
+			<form class="navbar-form">
+			  	<div class="form-group" onsubmit="return false">
+
+				<select class="form-control" name="search_bar" id="dropdown_list">
+					<li><option selected="select">Select Keyword</option></li>
+					<li><option value="cat">Cat</option></li>
+					<li><option value="dog">Dog</option></li>
+					<li><option value="cricket">Cricket</option></li>
+					<li><option value="football">Football</option></li>
+					<li><option value="modi">Modi</option></li>
+					<li><option value="trump">Trump</option></li>
+					<li><option value="song">Song</option></li>
+					<li><option value="vacation">Vacation</option></li>
+					<li><option value="offer">Offer</option></li>
+					<li><option value="sale">Sale</option></li>
+				</select>
+				</div>
+			</form>
+		  </ul>
+		  <form class="navbar-form" onsubmit="return false">
+
+			<div class="form-group">
+			  <input type="text" class="form-control" placeholder="Search" name="search_bar" id="search_box">
+			</div>
+			<button type="submit" class="btn btn-default" id="search_button">Search</button>
+		  </form>
+		</div>
+	  </div>
+	</nav>
+
+	<footer class="navbar-default navbar-fixed-bottom" style="padding:5px; background-color: rgba(0,0,0,0);
+">
+		<div class="container" style="margin-left: 0;">
+			<div style="display: inline-block;" class="foo green">
+				<p style="display: inline-block;">Positive</p></div>
+			<div style="display: inline-block;" class="foo orange">
+				<p style="display: inline-block;">Negative</p></div>
+			<div style="display: inline-block;" class="foo blue">
+				<p style="display: inline-block;">Neutral</p></div>
+			<div style="display: inline-block;" class="foo yellow">
+				<p style="display: inline-block;">Unknown</p></div>
+		</div>
+	</footer>
+
+	<style type="text/css">
+	.foo {
+		  float: left;
+		  width: auto;
+		  height: auto;
+		  margin: 0.5%;
+		  padding-top: 1%;
+		  padding-left: 1%;
+		  padding-right: 1%;
+		  border: 1px solid rgba(0, 0, 0, .2);
+		  color: white;
+		  font-weight: bold;
+		  border-radius: 7px;
+		}
+
+		.blue {
+		  background: #2962FF;
+		}
+
+		.green {
+		  background: #00C853;
+		}
+
+		.orange {
+		  background: #FF3D00;
+		}
+
+		.yellow {
+		  background: #FFC107;
+		}
+	</style>
+
+	<script>
+		var search_term;
+
+		$(document).ready(function() {
+			if (!localStorage['flag']) {
+				localStorage['flag']=1;
+				console.log("StreamingService Lambda Function Invoked");
+				$.ajax({
+					url : ,//AWS API Gateway URL for Streaming Tweets
+					type : "GET",
+					success : function(data) {
+						console.log("Success function 1");
+					},
+					error : function(request, error) {
+						console.log("StreamingService Lambda Function Timed Out");
+						console.log("Error function 1 : request\n" + JSON.stringify(request));
+						console.log("Error function 1 : error\n" + JSON.stringify(error));
+					}
+				});
+			}
+			getSearchResult();
+		});
+		
+		$('#dropdown_list').change(function() {
+			search_term = $('#dropdown_list').val();
+			console.log("search_term = "+search_term);
+			$('#search_box').val('');
+			setSearchTerm();
+		});
+
+		$('#search_button').click(function() {
+			search_term = $('#search_box').val();
+			console.log("search_term = "+search_term);
+			$('#dropdown_list')[0].selectedIndex=0;
+			setSearchTerm();
+		});
+
+		function initMap(){
+			var ny = { lat: 40.7128, lng: -74.0060 };
+			var map = new google.maps.Map(document.getElementById('map'), {
+				zoom: 3,
+				center: ny,
+				styles :
+				[
+					{
+						"stylers": [
+							{
+								"visibility": "simplified"
+							}
+						]
+					},
+					{
+						"stylers": [
+							{
+								"color": "#131314"
+							}
+						]
+					},
+					{
+						"featureType": "water",
+						"stylers": [
+							{
+								"color": "#131313"
+							},
+							{
+								"lightness": 7
+							}
+						]
+					},
+					{
+						"elementType": "labels.text.fill",
+						"stylers": [
+							{
+								"visibility": "on"
+							},
+							{
+								"lightness": 25
+							}
+						]
+					}
+				]
+				
+			});
+			return map;
+		}
+
+		function plotMap(languages, latitude, longitude, tweet_id, tweet_text, user_profile_image_url, user_screen_name, sentiment) {
+			var count = 0;
+			var map = initMap();
+
+			marker_color = 'black';
+			for(i = 0; i<latitude.length; i++){
+				if(latitude[i]!=999){
+					switch(sentiment[i]){
+						case 'positive': marker_color = '#00C853'
+									break;
+						case 'negative': marker_color = '#FF3D00'
+									break;
+						case 'neutral': marker_color = '#2962FF'
+									break;
+						case 'unknown': marker_color = '#FFC107'
+									break;
+					}
+
+					var dot_symbol = {
+						path: 'M 2,2 2,2 2,2 2,2 z',
+						strokeColor: marker_color,
+						fillColor: marker_color,
+						fillOpacity: 1,
+						scale: 7
+					};
+
+					var contentString = '<div>Tweet : '+count+'</div>';
+					count++;
+					var infowindow = new google.maps.InfoWindow({
+						content: contentString
+					});
+
+					var marker = new google.maps.Marker({
+						position: {lat: parseFloat(latitude[i]), lng: parseFloat(longitude[i])},
+						map: map,
+						title: 'Placeholder',
+						icon: dot_symbol
+					});
+
+					var tweet_url = "https://twitter.com/"+user_screen_name[i];
+
+					var content = '<style>'
+								+'.widget' 
+								+'{'
+								+	'max-width:300px;'
+								+	'margin:auto;'
+								+'}'
+								+'.profile_pic{'
+								+	'float:left;'
+								+	'width:40px;'
+								+	'height:40px;'
+								+	'border-radius:50%;'
+								+'}'
+								+'</style>'+'<div class="widget">'
+								+'<div>'
+								+'<img class="profile_pic" hspace="20" src='+user_profile_image_url[i]+' alt='+user_screen_name[i]+'>'
+								+'<h4 style="color: #1DA1F2; overflow:hidden;"><a href='+tweet_url+'>@'+user_screen_name[i]+'</a></h4>'
+								+'</div>'
+								+'<p style="font-size:15px; overflow:hidden;">'+tweet_text[i]+'</p>'
+								+'</div>';
+
+					var infowindow = new google.maps.InfoWindow();
+					bindInfoWindow(marker, map, infowindow, content);
+				}
+			}
+		}
+
+		var current = false;
+		
+		function bindInfoWindow(marker, map, infowindow, html) {
+			marker.addListener('click', function() {
+				if(current){
+					current.close();
+				}
+				current = infowindow;
+				infowindow.setContent(html);
+				infowindow.open(map, this);
+			});
+		}
+
+		function setSearchTerm() {
+			if (search_term!=null) {
+				if (search_term!=localStorage.getItem('local_storage_search_term'))
+					localStorage.setItem('local_storage_search_term',search_term);
+			}
+			else if(localStorage.getItem('local_storage_search_term')!=null)
+				search_term = localStorage.getItem('local_storage_search_term');
+			getSearchResult();
+		}
+
+		function getSearchResult() {
+			setInterval(function() {
+				console.log("Inside Ajax function")
+				
+				if (search_term==null)
+					search_term = 'in';
+
+				$.ajax({
+					url : , //AWS API Gateway URL for Searching Tweets
+					type : "POST",
+					contentType : "application/json",
+					success : function(data) {
+						console.log("Success function 2");
+						
+						data = JSON.parse(data);
+						console.log(data.results);
+
+						var languages = [];
+						var latitude = [];
+						var longitude = [];
+						var tweet_id = [];
+						var tweet_text = [];
+						var user_profile_image_url = [];
+						var user_screen_name = [];
+						var sentiment = [];
+
+						for (i=0; i<data.results.length; i++) {
+							languages.push(data.results[i].language.toString());
+							latitude.push(data.results[i].latitude);
+							longitude.push(data.results[i].longitude);
+							tweet_id.push(data.results[i].tweet_id);
+							tweet_text.push(data.results[i].tweet_text.toString());
+							user_profile_image_url.push(data.results[i].user_profile_image_url.toString());
+							user_screen_name.push(data.results[i].user_screen_name.toString());
+							sentiment.push(data.results[i].sentiment.toString());
+						}
+						
+						var positive_count = 0;
+						var negative_count = 0;
+						var neutral_count = 0;
+						var unknown_count = 0;
+
+						for (i=0; i<sentiment.length; i++){
+							switch(sentiment[i]){
+								case 'positive': positive_count++;
+											break;
+								case 'negative': negative_count++;
+											break;
+								case 'neutral': neutral_count++;
+											break;
+								case 'unknown': unknown_count++;
+											break;
+							}
+						}
+
+						Command: toastr["success"]("Search results for '"+search_term+"' :<br>Positive: "+positive_count+"&nbsp;&nbsp;Negative: "+negative_count+"<br>Neutral: "+neutral_count+"&nbsp;&nbsp;Unknown: "+unknown_count+"", "TweetMap")
+
+						toastr.options = {
+							"closeButton": true,
+							"debug": false,
+							"newestOnTop": false,
+							"progressBar": false,
+							"positionClass": "toast-bottom-right",
+							"preventDuplicates": true,
+							"onclick": null,
+							"showDuration": "300",
+							"hideDuration": "1000",
+							"timeOut": "5000",
+							"extendedTimeOut": "1000",
+							"showEasing": "swing",
+							"hideEasing": "linear",
+							"showMethod": "fadeIn",
+							"hideMethod": "fadeOut"
+						}
+
+						plotMap(languages, latitude, longitude, tweet_id, tweet_text, user_profile_image_url, user_screen_name, sentiment);
+					},
+					error : function(request, error) {
+						console.log("Error function 2" + JSON.stringify(request));
+						console.log("Error function 2" + JSON.stringify(error));
+					}
+				});
+			}, 20000);
+		}
+	</script>
+	<script async defer
+		src="https://maps.googleapis.com/maps/api/js?key=MAPS_API_KEY&callback=initMap">
+	</script>
+	<div id="map"></div>
+</body>
+</html>
