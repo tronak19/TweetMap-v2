@@ -11,6 +11,9 @@ access_token_secret = ''
 
 kinesis = boto3.client('kinesis', region_name='us-east-2')
 
+elasticache = boto3.client('elasticache')
+elasticache.remove_tags_from_resource(ResourceName='', TagKeys=['shard_iterator'])
+
 class StreamListener(tweepy.StreamListener):
 	
 	def __init__(self, api):
